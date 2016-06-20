@@ -67,7 +67,7 @@ Segment's Objects API requires a unique identifier in order to properly sync you
 
 ### Scan
 ```bash
-mysql --write-key=ab-200-1alx91kx --hostname=postgres-test.ksdg31bcms.us-west-2.rds.amazonaws.com --port=5432 --username=segment --password=cndgks8102baajls --database=segment
+mysql --write-key=ab-200-1alx91kx --hostname=mysql-test.ksdg31bcms.us-west-2.rds.amazonaws.com --port=5432 --username=segment --password=cndgks8102baajls --database=segment
 ```
 
 Example Run:
