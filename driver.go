@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/segment-sources/sqlsource/domain"
-	"github.com/segmentio/kit/log"
 )
 
 type tableDescriptionRow struct {
@@ -52,7 +52,7 @@ func (m *MySQL) Init(c *domain.Config) error {
 
 func (m *MySQL) Scan(t *domain.Table) (*sqlx.Rows, error) {
 	query := fmt.Sprintf("SELECT %s FROM `%s`.`%s`", t.ColumnToSQL(), t.SchemaName, t.TableName)
-	log.Debugf("Executing query: %v", query)
+	logrus.Debugf("Executing query: %v", query)
 
 	return m.Connection.Queryx(query)
 }
