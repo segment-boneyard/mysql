@@ -51,10 +51,14 @@ func (m *MySQL) Init(c *domain.Config) error {
 }
 
 func (m *MySQL) Scan(t *domain.Table) (*sqlx.Rows, error) {
-	query := fmt.Sprintf("SELECT %s FROM `%s`.`%s`", t.ColumnToSQL(), t.SchemaName, t.TableName)
+	query := fmt.Sprintf("SELECT %s FROM `%s`.`%s`", mysqlColumnsToSQL(t), t.SchemaName, t.TableName)
 	logrus.Debugf("Executing query: %v", query)
 
 	return m.Connection.Queryx(query)
+}
+
+func mysqlColumnsToSQL(t *domain.Table) string {
+	return strings.Join(t.Columns, ", ")
 }
 
 func (m *MySQL) Describe() (*domain.Description, error) {
