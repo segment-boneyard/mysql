@@ -58,7 +58,12 @@ func (m *MySQL) Scan(t *domain.Table) (*sqlx.Rows, error) {
 }
 
 func mysqlColumnsToSQL(t *domain.Table) string {
-	return strings.Join(t.Columns, ", ")
+	var c []string
+	for _, column := range t.Columns {
+		c = append(c, fmt.Sprintf("`%s`", column))
+	}
+
+	return strings.Join(c, ", ")
 }
 
 func (m *MySQL) Describe() (*domain.Description, error) {
