@@ -65,6 +65,18 @@ func (m *MySQL) Scan(t *domain.Table) (*sqlx.Rows, error) {
 	return stmt.Queryx()
 }
 
+func (m *MySQL) Transform(row map[string]interface{}) map[string]interface{} {
+	// The MySQL driver returns text and date columns as []byte instead of string.
+	for k, v := range row {
+		switch val := v.(type) {
+		case []byte:
+			row[k] = string(val)
+		}
+	}
+
+	return row
+}
+
 func mysqlColumnsToSQL(t *domain.Table) string {
 	var c []string
 	for _, column := range t.Columns {
