@@ -54,7 +54,15 @@ func (m *MySQL) Scan(t *domain.Table) (*sqlx.Rows, error) {
 	query := fmt.Sprintf("SELECT %s FROM `%s`.`%s`", mysqlColumnsToSQL(t), t.SchemaName, t.TableName)
 	logrus.Debugf("Executing query: %v", query)
 
-	return m.Connection.Queryx(query)
+	// Note: We have to get a Statement so that the MySQL driver
+	// will use its binary protocol during the scan, and do proper
+	// type conversion of incoming results.
+	stmt, err := m.Connection.Preparex(query)
+	if err != nil {
+		return nil, err
+	}
+
+	return stmt.Queryx()
 }
 
 func mysqlColumnsToSQL(t *domain.Table) string {
