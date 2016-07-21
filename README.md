@@ -26,6 +26,8 @@ would be queryable in your analytics Redshift or MySQL database like this...
 
 ## Quick Start
 
+The source process is to be run in a trusted environment that has access to the DB endpoint. This may be either the DB itself, or it could also be a dev box that has access to the DB.
+
 ### Build and Run
 Prerequisites: [Go](https://golang.org/doc/install)
 
