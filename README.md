@@ -1,6 +1,6 @@
 # MySQL Source
 
-Segment source for Postgresql Databases. Syncs your production MySQL database with [Segment Objects API](https://github.com/segmentio/objects-go).
+Segment source for MySQL databases. Syncs your production MySQL database with [Segment Objects API](https://github.com/segmentio/objects-go).
 
 ### Schema
 A `listings` table in the `products` schema that looks like this in your production MySQL...
