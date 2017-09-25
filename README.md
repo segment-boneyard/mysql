@@ -29,15 +29,15 @@ would be queryable in your analytics Redshift or MySQL database like this...
 The source process is to be run in a trusted environment that has access to the DB endpoint. This may be either the DB itself, or it could also be a dev box that has access to the DB.
 
 ### Build and Run
-Prerequisites: [Go](https://golang.org/doc/install)
+Prerequisites: [Go >= 1.7](https://golang.org/doc/install)
 
 ```bash
-go get -u github.com/segment-sources/mysql
+go get -u github.com/segment-sources/mysql/cmd/source-mysql
 ```
 
-The first step is to initialize your schema. You can do so by running `mysql` with `--init` flag.
+The first step is to initialize your schema. You can do so by running `source-mysql` with `--init` flag.
 ```bash
-mysql --init --write-key=ab-200-1alx91kx --hostname=mysql-test.ksdg31bcms.us-west-2.rds.amazonaws.com --port=3306 --username=segment --password=cndgks8102baajls --database=segment
+source-mysql --init --write-key=ab-200-1alx91kx --hostname=mysql-test.ksdg31bcms.us-west-2.rds.amazonaws.com --port=3306 --username=segment --password=cndgks8102baajls --database=segment
 ```
 The init step will store the schema of possible tables that the source can sync in `schema.json`. The query will look for tables across all schemas excluding the ones without a `PRIMARY KEY`.
 
@@ -69,7 +69,7 @@ Segment's Objects API requires a unique identifier in order to properly sync you
 
 ### Scan
 ```bash
-mysql --write-key=ab-200-1alx91kx --hostname=mysql-test.ksdg31bcms.us-west-2.rds.amazonaws.com --port=5432 --username=segment --password=cndgks8102baajls --database=segment
+source-mysql --write-key=ab-200-1alx91kx --hostname=mysql-test.ksdg31bcms.us-west-2.rds.amazonaws.com --port=5432 --username=segment --password=cndgks8102baajls --database=segment
 ```
 
 Example Run:
@@ -83,7 +83,7 @@ INFO[0000] Scan finished                                 schema=public table=fil
 ### Usage
 ```
 Usage:
-  mysql
+  source-mysql
     [--debug]
     [--init]
     [--concurrency=<c>]
@@ -94,8 +94,8 @@ Usage:
     --password=<password>
     --database=<database>
     [-- <extra-driver-options>...]
-  mysql -h | --help
-  mysql --version
+  source-mysql -h | --help
+  source-mysql --version
 
 Options:
   -h --help                   Show this screen

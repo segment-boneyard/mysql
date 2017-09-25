@@ -1,4 +1,4 @@
-package main
+package mysql
 
 import (
 	"fmt"
@@ -8,7 +8,10 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/segment-sources/sqlsource/domain"
+	"github.com/segment-sources/sqlsource/driver"
 )
+
+const chunkSize = 1000000
 
 type tableDescriptionRow struct {
 	Catalog    string `db:"table_catalog"`
@@ -50,19 +53,60 @@ func (m *MySQL) Init(c *domain.Config) error {
 	return nil
 }
 
-func (m *MySQL) Scan(t *domain.Table) (*sqlx.Rows, error) {
-	query := fmt.Sprintf("SELECT %s FROM `%s`.`%s`", mysqlColumnsToSQL(t), t.SchemaName, t.TableName)
-	logrus.Debugf("Executing query: %v", query)
+func (m *MySQL) Scan(t *domain.Table, lastPkValues []interface{}) (driver.SqlRows, error) {
+	// in most cases whereClause will simply look like "id" > 114, but since the source supports compound PKs
+	// we must be able to include all PK columns in the query. For example, for a table with 3-column PK:
+	//	a | b | c
+	//	---+---+---
+	//	1 | 1 | 1
+	//	1 | 1 | 2
+	//	1 | 2 | 1
+	//	1 | 2 | 2
+	//	2 | 1 | 1
+	//
+	// whereClause selecting records after (1, 1, 1) should look like:
+	// a > 1 OR a = 1 AND b > 1 OR a = 1 AND b = 1 AND c > 1
+	whereClause := "true"
+	bindVars := []interface{}{}
+	if len(lastPkValues) > 0 {
+		// {"a > 1", "a = 1 AND b > 1", "a = 1 AND b = 1 AND c > 1"}
+		whereOrList := []string{}
 
-	// Note: We have to get a Statement so that the MySQL driver
-	// will use its binary protocol during the scan, and do proper
-	// type conversion of incoming results.
+		for i, pk := range t.PrimaryKeys {
+			// {"a = 1", "b = 1", "c > 1"}
+			choiceAndList := []string{}
+			for j := 0; j < i; j++ {
+				choiceAndList = append(choiceAndList, fmt.Sprintf("`%s` = ?", t.PrimaryKeys[j]))
+				bindVars = append(bindVars, lastPkValues[j])
+			}
+			choiceAndList = append(choiceAndList, fmt.Sprintf("`%s` > ?", pk))
+			bindVars = append(bindVars, lastPkValues[i])
+			whereOrList = append(whereOrList, strings.Join(choiceAndList, " AND "))
+		}
+		whereClause = strings.Join(whereOrList, " OR ")
+	}
+
+	orderByList := make([]string, 0, len(t.PrimaryKeys))
+	for _, column := range t.PrimaryKeys {
+		orderByList = append(orderByList, fmt.Sprintf("`%s`", column))
+	}
+	orderByClause := strings.Join(orderByList, ", ")
+
+	query := fmt.Sprintf("SELECT %s FROM `%s`.`%s` WHERE %s ORDER BY %s LIMIT %d", mysqlColumnsToSQL(t), t.SchemaName,
+		t.TableName, whereClause, orderByClause, chunkSize)
+
+	logger := logrus.WithFields(logrus.Fields{
+		"sql":  query,
+		"args": bindVars,
+	})
+	logger.Debugf("Executing query")
+
 	stmt, err := m.Connection.Preparex(query)
 	if err != nil {
 		return nil, err
 	}
 
-	return stmt.Queryx()
+	return stmt.Queryx(bindVars...)
 }
 
 func (m *MySQL) Transform(row map[string]interface{}) map[string]interface{} {
