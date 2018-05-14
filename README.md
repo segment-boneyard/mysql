@@ -1,5 +1,7 @@
 # MySQL Source
 
+**This source is no longer actively maintained, and is only available as-is**
+
 Segment source for MySQL databases. Syncs your production MySQL database with [Segment Objects API](https://github.com/segmentio/objects-go).
 
 ### Schema
